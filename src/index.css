@@ -1,4 +1,13 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap');
+
+@theme {
+  --color-accent: #7C3AED;
+  --color-surface: #17171C;
+  --color-deep: #0E0E11;
+  --color-muted: #9CA3AF;
+}
+
 
 * {
   margin: 0;

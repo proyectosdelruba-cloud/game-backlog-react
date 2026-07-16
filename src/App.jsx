@@ -3,13 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
   Search, Shuffle, Gamepad2, CircleCheck, Bookmark, CircleX,
-  Heart, Star, X, ChevronDown, User, LogOut, Sparkles, Eye,
+  Heart, Star, X, ChevronDown, User, Users, LogOut, Sparkles, Eye,
   Pencil, Undo2, Loader2, ImageOff, TrendingUp
 } from 'lucide-react';
 import { supabase, supabaseHabilitado } from './supabaseClient';
 import './App.css';
 import EditarPerfil from './components/EditarPerfil';
 import { obtenerPerfil } from './perfilService';
+import UserSearch from './components/UserSearch';
+import SocialFeed from './components/SocialFeed';
+import { getFollowingReviews, toggleLikeReview } from './services/socialService';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -629,6 +632,38 @@ export default function App() {
   const [authError, setAuthError] = useState(null);
   const [authCargando, setAuthCargando] = useState(false);
   const [avisoRegistro, setAvisoRegistro] = useState(null);
+  const [feedReviews, setFeedReviews] = useState([]);
+  const [cargandoFeed, setCargandoFeed] = useState(false);
+
+  useEffect(() => {
+    if (pestanaActiva !== "comunidad" || !supabaseHabilitado || !user) return;
+
+    setCargandoFeed(true);
+    getFollowingReviews(user.id)
+      .then(setFeedReviews)
+      .catch((err) => console.error('No se pudo cargar el feed:', err))
+      .finally(() => setCargandoFeed(false));
+  }, [pestanaActiva, user]); 
+   
+  const manejarLikeEnFeed = useCallback(async (reviewId) => {
+    const aplicarToggle = (lista) => lista.map(r =>
+      r.id === reviewId
+        ? { ...r, likedByMe: !r.likedByMe, likesCount: r.likesCount + (r.likedByMe ? -1 : 1) }
+        : r
+    );
+
+    setFeedReviews(aplicarToggle); // Optimista: cambia el corazón en tu pantalla al instante
+
+    try {
+      const resultado = await toggleLikeReview(reviewId, user.id);
+      setFeedReviews(prev => prev.map(r =>
+        r.id === reviewId ? { ...r, likedByMe: resultado.liked, likesCount: resultado.likesCount } : r
+      ));
+    } catch (err) {
+      console.error(err);
+      setFeedReviews(aplicarToggle); // Si falla internet o da error, revierte el corazón a su estado real
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!supabaseHabilitado) {
@@ -1052,6 +1087,23 @@ export default function App() {
               />
             </motion.div>
           )}
+          {pestanaActiva === "comunidad" && (
+           !supabaseHabilitado || !user ? (
+            <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
+  ) : (
+    <div className="flex flex-col gap-5">
+      <UserSearch currentUserId={user.id} />
+      <div className="mt-4">
+        <h3 className="text-sm font-semibold text-gray-100 mb-2">Actividad reciente</h3>
+        {cargandoFeed ? (
+          <p className="mensaje-estado">Cargando actividad...</p>
+        ) : (
+          <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} />
+        )}
+      </div>
+    </div>
+  )
+)}
         </AnimatePresence>
       </main>
 
@@ -1080,6 +1132,13 @@ export default function App() {
           <User size={20} strokeWidth={2} />
           <span className="tab-label">Perfil</span>
         </button>
+        <button 
+          className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`} 
+          onClick={() => setPestanaActiva("comunidad")}
+>
+        <Users size={20} strokeWidth={1.75} />
+  <span className="tab-label">Comunidad</span>
+</button>
       </nav>
 
       <AnimatePresence>
