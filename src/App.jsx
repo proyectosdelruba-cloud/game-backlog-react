@@ -13,6 +13,7 @@ import { obtenerPerfil } from './perfilService';
 import UserSearch from './components/UserSearch';
 import SocialFeed from './components/SocialFeed';
 import { getFollowingReviews, toggleLikeReview } from './services/socialService';
+import UserProfileView from './components/UserProfileView';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -633,6 +634,7 @@ export default function App() {
   const [authCargando, setAuthCargando] = useState(false);
   const [avisoRegistro, setAvisoRegistro] = useState(null);
   const [feedReviews, setFeedReviews] = useState([]);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [cargandoFeed, setCargandoFeed] = useState(false);
 
   useEffect(() => {
@@ -664,6 +666,9 @@ export default function App() {
       setFeedReviews(aplicarToggle); // Si falla internet o da error, revierte el corazón a su estado real
     }
   }, [user]);
+
+  const verPerfilDeUsuario = useCallback((userId) => setUsuarioSeleccionado(userId), []);
+  const volverAComunidad = useCallback(() => setUsuarioSeleccionado(null), []);
 
   useEffect(() => {
     if (!supabaseHabilitado) {
@@ -1088,17 +1093,19 @@ export default function App() {
             </motion.div>
           )}
           {pestanaActiva === "comunidad" && (
-           !supabaseHabilitado || !user ? (
-            <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
+  !supabaseHabilitado || !user ? (
+    <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
+  ) : usuarioSeleccionado ? (
+    <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
   ) : (
     <div className="flex flex-col gap-5">
-      <UserSearch currentUserId={user.id} />
-      <div className="mt-4">
+      <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
+      <div>
         <h3 className="text-sm font-semibold text-gray-100 mb-2">Actividad reciente</h3>
         {cargandoFeed ? (
-          <p className="mensaje-estado">Cargando actividad...</p>
+          <p className="mensaje-estado">Cargando...</p>
         ) : (
-          <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} />
+          <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
         )}
       </div>
     </div>

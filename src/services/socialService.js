@@ -25,7 +25,17 @@ export async function getFollowingIds(userId) {
   return data.map(f => f.following_id);
 }
 
-// Una única consulta con JOIN embebido trae reseña + perfil del autor + likes.
+export async function getContadoresSociales(userId) {
+  const [seguidoresRes, seguidosRes] = await Promise.all([
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
+  ]);
+  if (seguidoresRes.error) throw seguidoresRes.error;
+  if (seguidosRes.error) throw seguidosRes.error;
+  return { seguidores: seguidoresRes.count ?? 0, seguidos: seguidosRes.count ?? 0 };
+}
+
+// Una única consulta con JOIN embebido: reseña + perfil del autor + likes.
 export async function getFollowingReviews(userId) {
   const idsSeguidos = await getFollowingIds(userId);
   if (idsSeguidos.length === 0) return [];
@@ -61,16 +71,10 @@ export async function toggleLikeReview(reviewId, userId) {
   if (errorLectura) throw errorLectura;
 
   if (existente) {
-    const { error } = await supabase
-      .from('review_likes')
-      .delete()
-      .eq('review_id', reviewId)
-      .eq('user_id', userId);
+    const { error } = await supabase.from('review_likes').delete().eq('review_id', reviewId).eq('user_id', userId);
     if (error) throw error;
   } else {
-    const { error } = await supabase
-      .from('review_likes')
-      .insert({ review_id: reviewId, user_id: userId });
+    const { error } = await supabase.from('review_likes').insert({ review_id: reviewId, user_id: userId });
     if (error) throw error;
   }
 
@@ -92,4 +96,25 @@ export async function searchUsers(query, currentUserId) {
     .limit(20);
   if (error) throw error;
   return data;
+}
+
+// Perfil público completo: datos de perfil + backlog entero + contadores sociales.
+export async function getPerfilPublico(userId) {
+  const { data: perfil, error: errorPerfil } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url')
+    .eq('id', userId)
+    .single();
+  if (errorPerfil) throw errorPerfil;
+
+  const { data: juegos, error: errorJuegos } = await supabase
+    .from('user_games')
+    .select('*')
+    .eq('user_id', userId)
+    .order('fecha_guardado', { ascending: false });
+  if (errorJuegos) throw errorJuegos;
+
+  const { seguidores, seguidos } = await getContadoresSociales(userId);
+
+  return { perfil, juegos: juegos || [], totalSeguidores: seguidores, totalSeguidos: seguidos };
 }

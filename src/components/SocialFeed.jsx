@@ -5,10 +5,10 @@ function formatearFecha(fechaISO) {
   return fechaISO ? new Date(fechaISO).toLocaleDateString() : '';
 }
 
-const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike }) {
+const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike, onSelectUser }) {
   return (
     <article className="bg-surface border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
-      <header className="flex items-center gap-3">
+      <button onClick={() => onSelectUser(review.user_id)} className="flex items-center gap-3 flex-1 min-w-0 text-left bg-transparent border-0 p-0 cursor-pointer">
         {review.profiles?.avatar_url ? (
           <img src={review.profiles.avatar_url} alt={review.profiles.username} className="w-9 h-9 rounded-full object-cover" />
         ) : (
@@ -18,8 +18,8 @@ const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike }) {
           <p className="text-sm font-semibold text-gray-100 truncate">{review.profiles?.username ?? 'Jugador'}</p>
           <p className="text-xs text-muted">jugó {review.name}</p>
         </div>
-        <span className="text-[11px] text-muted whitespace-nowrap">{formatearFecha(review.fecha_guardado)}</span>
-      </header>
+      </button>
+      <span className="text-[11px] text-muted whitespace-nowrap">{formatearFecha(review.fecha_guardado)}</span>
 
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((valor) => (
@@ -42,7 +42,7 @@ const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike }) {
   );
 });
 
-function SocialFeed({ reviews, onToggleLike }) {
+function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
   if (reviews.length === 0) {
     return <p className="text-sm text-muted text-center py-6">Sigue a otros jugadores para ver sus reseñas aquí.</p>;
   }
@@ -50,7 +50,7 @@ function SocialFeed({ reviews, onToggleLike }) {
   return (
     <div className="flex flex-col gap-3">
       {reviews.map((review) => (
-        <TarjetaReview key={review.id} review={review} onToggleLike={onToggleLike} />
+        <TarjetaReview key={review.id} review={review} onToggleLike={onToggleLike} onSelectUser={onSelectUser} />
       ))}
     </div>
   );

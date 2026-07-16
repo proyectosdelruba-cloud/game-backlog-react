@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Search, UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { searchUsers, followUser, unfollowUser, getFollowingIds } from '../services/socialService';
 
-export default function UserSearch({ currentUserId }) {
+export default function UserSearch({ currentUserId, onSelectUser }) {
   const [query, setQuery] = useState('');
   const [resultados, setResultados] = useState([]);
   const [siguiendo, setSiguiendo] = useState(new Set());
@@ -75,13 +75,14 @@ export default function UserSearch({ currentUserId }) {
 
           return (
             <div key={usuario.id} className="flex items-center gap-3 bg-surface border border-white/5 rounded-lg p-2.5">
-              {usuario.avatar_url ? (
-                <img src={usuario.avatar_url} alt={usuario.username} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-accent/15 flex-shrink-0" />
-              )}
-
-              <span className="flex-1 text-sm text-gray-100 truncate">{usuario.username}</span>
+              <button onClick={() => onSelectUser(usuario.id)} className="flex items-center gap-3 flex-1 min-w-0 text-left bg-transparent border-0 p-0 cursor-pointer">
+  {usuario.avatar_url ? (
+    <img src={usuario.avatar_url} alt={usuario.username} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+  ) : (
+    <div className="w-9 h-9 rounded-full bg-accent/15 flex-shrink-0" />
+  )}
+  <span className="text-sm text-gray-100 truncate">{usuario.username}</span>
+</button>
 
               <button
                 onClick={() => alternarSeguir(usuario.id)}
