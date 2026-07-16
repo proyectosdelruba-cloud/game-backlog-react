@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { supabase, supabaseHabilitado } from './supabaseClient';
 import './App.css';
+import EditarPerfil from './components/EditarPerfil';
+import { obtenerPerfil } from './perfilService';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -519,7 +521,9 @@ function PestanaPerfil({
   supabaseHabilitado: supabaseOn, sesionCargando, user,
   authError, authCargando, avisoRegistro, onLogin, onRegistro, onLogout,
   nombreUsuario, onCambiarNombre,
-  totalJugando, totalCompletados, totalPendientes, totalDropeados, favoritos
+  totalJugando, totalCompletados, totalPendientes, totalDropeados, favoritos,
+  // Nuevas props desestructuradas:
+  perfil, onPerfilActualizado
 }) {
   if (supabaseOn && sesionCargando) {
     return (
@@ -553,17 +557,26 @@ function PestanaPerfil({
       </section>
 
       <section className="perfil-card">
-        <div className="avatar"><User size={28} strokeWidth={1.75} /></div>
-
+        {/* Renderizado condicional según si usamos base de datos en la nube o modo local */}
         {supabaseOn ? (
-          <p className="perfil-email">{user.email}</p>
+          <>
+            <EditarPerfil 
+              user={user} 
+              perfil={perfil} 
+              onPerfilActualizado={onPerfilActualizado} 
+            />
+            <p className="perfil-email">{user.email}</p>
+          </>
         ) : (
-          <input
-            className="input-username"
-            value={nombreUsuario}
-            onChange={(e) => onCambiarNombre(e.target.value)}
-            onBlur={(e) => onCambiarNombre(e.target.value.trim() || "Jugador")}
-          />
+          <>
+            <div className="avatar"><User size={28} strokeWidth={1.75} /></div>
+            <input
+              className="input-username"
+              value={nombreUsuario}
+              onChange={(e) => onCambiarNombre(e.target.value)}
+              onBlur={(e) => onCambiarNombre(e.target.value.trim() || "Jugador")}
+            />
+          </>
         )}
 
         <div className="estadisticas">
@@ -607,6 +620,7 @@ export default function App() {
   const [nombreUsuario, setNombreUsuario] = useState(
     () => localStorage.getItem("gamebox-username") || "Jugador"
   );
+  const [perfil, setPerfil] = useState(null);
 
   const [backlog, setBacklog] = useState([]);
 
@@ -640,6 +654,16 @@ export default function App() {
     } else if (!user) {
       const guardado = localStorage.getItem("gamebox-backlog");
       setBacklog(guardado ? JSON.parse(guardado) : []);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (supabaseHabilitado && user) {
+      obtenerPerfil(user.id)
+        .then(setPerfil)
+        .catch((err) => console.error('No se pudo cargar el perfil:', err));
+    } else {
+      setPerfil(null);
     }
   }, [user]);
 
@@ -920,6 +944,10 @@ export default function App() {
     setCategoriaAbierta(prev => (prev === clave ? null : clave));
   }, []);
 
+  const onPerfilActualizado = useCallback((cambios) => {
+    setPerfil(prev => ({ ...prev, ...cambios }));
+  }, []);
+
   const jugando = backlog.filter(g => g.status === "jugando");
   const completados = backlog.filter(g => g.status === "completado");
   const pendientes = backlog.filter(g => g.status === "pendiente");
@@ -1019,6 +1047,8 @@ export default function App() {
                 totalPendientes={pendientes.length}
                 totalDropeados={dropeados.length}
                 favoritos={favoritos}
+                perfil={perfil}
+                onPerfilActualizado={onPerfilActualizado}
               />
             </motion.div>
           )}
