@@ -39,3 +39,30 @@ export async function subirAvatar(userId, archivo) {
   const { data } = supabase.storage.from('avatars').getPublicUrl(ruta);
   return data.publicUrl;
 }
+
+export async function actualizarRachaDiaria(userId) {
+  const hoy = new Date().toISOString().split('T')[0];
+
+  const { data: perfil, error } = await supabase
+    .from('profiles')
+    .select('streak_count, last_active_date')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+
+  if (perfil.last_active_date === hoy) return perfil.streak_count;
+
+  const ayer = new Date();
+  ayer.setDate(ayer.getDate() - 1);
+  const ayerStr = ayer.toISOString().split('T')[0];
+
+  const nuevaRacha = perfil.last_active_date === ayerStr ? perfil.streak_count + 1 : 1;
+
+  const { error: errorUpdate } = await supabase
+    .from('profiles')
+    .update({ streak_count: nuevaRacha, last_active_date: hoy })
+    .eq('id', userId);
+  if (errorUpdate) throw errorUpdate;
+
+  return nuevaRacha;
+}

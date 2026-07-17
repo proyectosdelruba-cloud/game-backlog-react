@@ -9,18 +9,18 @@ import {
 import { supabase, supabaseHabilitado } from './supabaseClient';
 import './App.css';
 import EditarPerfil from './components/EditarPerfil';
-import { obtenerPerfil } from './perfilService';
+import { obtenerPerfil, actualizarRachaDiaria } from './perfilService';
 import UserSearch from './components/UserSearch';
 import SocialFeed from './components/SocialFeed';
 import { getFollowingReviews, toggleLikeReview } from './services/socialService';
 import UserProfileView from './components/UserProfileView';
+import { SkeletonPosterGrid, SkeletonReviewCard } from './components/SkeletonCard';
+import { ProgressRing, DailyStreak } from './components/ProgressRing';
+import { CelebracionLogro } from './components/CelebracionLogro';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
 
-// Duplicados intencionales de tokens de color: los props `fill`/`color` de los
-// iconos SVG no siempre resuelven var(--css) de forma fiable como atributo de
-// presentación. Deben mantenerse sincronizados con :root en App.css.
 const COLOR_ACCENT = "#7C3AED";
 const COLOR_MUTED = "#9CA3AF";
 
@@ -56,15 +56,14 @@ function identidadDesde(obj) {
   };
 }
 
-function lanzarConfeti() {
-  confetti({
-    particleCount: 70,
-    spread: 65,
-    startVelocity: 35,
-    origin: { y: 0.65 },
-    colors: [COLOR_ACCENT, "#A78BFA", "#F3F4F6"],
-    disableForReducedMotion: true,
-  });
+function lanzarConfetiLegendario() {
+  const disparar = (opciones) => confetti({ ...opciones, disableForReducedMotion: true });
+
+  disparar({ particleCount: 60, spread: 55, origin: { x: 0.25, y: 0.65 }, colors: ['#7C3AED', '#A78BFA'] });
+  disparar({ particleCount: 60, spread: 55, origin: { x: 0.75, y: 0.65 }, colors: ['#F5A623', '#FFFFFF'] });
+  setTimeout(() => {
+    disparar({ particleCount: 90, spread: 100, origin: { y: 0.6 }, colors: ['#7C3AED', '#F5A623', '#FFFFFF'] });
+  }, 200);
 }
 
 // ---------- Subcomponentes: primitivos ----------
@@ -400,12 +399,7 @@ function PestanaBuscar({
         </section>
       )}
 
-      {cargando && (
-        <p className="mensaje-estado">
-          <Loader2 size={14} className="girando" /> Cargando
-        </p>
-      )}
-      {error && <p className="mensaje-estado error">{error}</p>}
+      {cargando && <SkeletonPosterGrid count={4} />}
 
       <AnimatePresence mode="wait">
         {juego && !cargando && (
@@ -526,8 +520,7 @@ function PestanaPerfil({
   authError, authCargando, avisoRegistro, onLogin, onRegistro, onLogout,
   nombreUsuario, onCambiarNombre,
   totalJugando, totalCompletados, totalPendientes, totalDropeados, favoritos,
-  // Nuevas props desestructuradas:
-  perfil, onPerfilActualizado
+  perfil, onPerfilActualizado, racha
 }) {
   if (supabaseOn && sesionCargando) {
     return (
@@ -561,13 +554,12 @@ function PestanaPerfil({
       </section>
 
       <section className="perfil-card">
-        {/* Renderizado condicional según si usamos base de datos en la nube o modo local */}
         {supabaseOn ? (
           <>
-            <EditarPerfil 
-              user={user} 
-              perfil={perfil} 
-              onPerfilActualizado={onPerfilActualizado} 
+            <EditarPerfil
+              user={user}
+              perfil={perfil}
+              onPerfilActualizado={onPerfilActualizado}
             />
             <p className="perfil-email">{user.email}</p>
           </>
@@ -582,6 +574,14 @@ function PestanaPerfil({
             />
           </>
         )}
+
+        <div className="flex items-center justify-center gap-5 mb-5">
+          <ProgressRing
+            completados={totalCompletados}
+            total={totalJugando + totalCompletados + totalPendientes + totalDropeados}
+          />
+          <DailyStreak racha={racha} />
+        </div>
 
         <div className="estadisticas">
           <div className="stat"><span className="stat-numero">{totalJugando}</span><span className="stat-label">Jugando</span></div>
@@ -625,6 +625,8 @@ export default function App() {
     () => localStorage.getItem("gamebox-username") || "Jugador"
   );
   const [perfil, setPerfil] = useState(null);
+  const [racha, setRacha] = useState(0);
+  const [celebrando, setCelebrando] = useState(null);
 
   const [backlog, setBacklog] = useState([]);
 
@@ -645,8 +647,8 @@ export default function App() {
       .then(setFeedReviews)
       .catch((err) => console.error('No se pudo cargar el feed:', err))
       .finally(() => setCargandoFeed(false));
-  }, [pestanaActiva, user]); 
-   
+  }, [pestanaActiva, user]);
+
   const manejarLikeEnFeed = useCallback(async (reviewId) => {
     const aplicarToggle = (lista) => lista.map(r =>
       r.id === reviewId
@@ -654,7 +656,7 @@ export default function App() {
         : r
     );
 
-    setFeedReviews(aplicarToggle); // Optimista: cambia el corazón en tu pantalla al instante
+    setFeedReviews(aplicarToggle);
 
     try {
       const resultado = await toggleLikeReview(reviewId, user.id);
@@ -663,7 +665,7 @@ export default function App() {
       ));
     } catch (err) {
       console.error(err);
-      setFeedReviews(aplicarToggle); // Si falla internet o da error, revierte el corazón a su estado real
+      setFeedReviews(aplicarToggle);
     }
   }, [user]);
 
@@ -701,6 +703,8 @@ export default function App() {
     if (supabaseHabilitado && user) {
       obtenerPerfil(user.id)
         .then(setPerfil)
+        .then(() => actualizarRachaDiaria(user.id))
+        .then(setRacha)
         .catch((err) => console.error('No se pudo cargar el perfil:', err));
     } else {
       setPerfil(null);
@@ -943,7 +947,9 @@ export default function App() {
   const guardarResena = useCallback(() => {
     guardarEnBacklog(juego, { puntuacion, resena: resenaTexto.trim(), status: "completado" });
     setEstadoActivo("completado");
-    lanzarConfeti();
+    lanzarConfetiLegendario();
+    setCelebrando(juego.name);
+    setTimeout(() => setCelebrando(null), 2600);
   }, [juego, puntuacion, resenaTexto, guardarEnBacklog]);
 
   const abrirParaEditar = useCallback((entrada) => {
@@ -999,6 +1005,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <CelebracionLogro visible={!!celebrando} juegoNombre={celebrando} />
       <header className="app-header">
         <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
         <h1>GameBox</h1>
@@ -1089,28 +1096,41 @@ export default function App() {
                 favoritos={favoritos}
                 perfil={perfil}
                 onPerfilActualizado={onPerfilActualizado}
+                racha={racha}
               />
             </motion.div>
           )}
+
           {pestanaActiva === "comunidad" && (
-  !supabaseHabilitado || !user ? (
-    <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
-  ) : usuarioSeleccionado ? (
-    <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
-  ) : (
-    <div className="flex flex-col gap-5">
-      <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
-      <div>
-        <h3 className="text-sm font-semibold text-gray-100 mb-2">Actividad reciente</h3>
-        {cargandoFeed ? (
-          <p className="mensaje-estado">Cargando...</p>
-        ) : (
-          <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
-        )}
-      </div>
-    </div>
-  )
-)}
+            <motion.div
+              key="comunidad"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.15 }}
+            >
+              {!supabaseHabilitado || !user ? (
+                <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
+              ) : usuarioSeleccionado ? (
+                <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
+              ) : (
+                <div className="flex flex-col gap-5">
+                  <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-100 mb-2">Actividad reciente</h3>
+                    {cargandoFeed ? (
+                      <div className="flex flex-col gap-3">
+                        <SkeletonReviewCard />
+                        <SkeletonReviewCard />
+                      </div>
+                    ) : (
+                      <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -1139,13 +1159,14 @@ export default function App() {
           <User size={20} strokeWidth={2} />
           <span className="tab-label">Perfil</span>
         </button>
-        <button 
-          className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`} 
+        <button
+          type="button"
+          className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`}
           onClick={() => setPestanaActiva("comunidad")}
->
-        <Users size={20} strokeWidth={1.75} />
-  <span className="tab-label">Comunidad</span>
-</button>
+        >
+          <Users size={20} strokeWidth={1.75} />
+          <span className="tab-label">Comunidad</span>
+        </button>
       </nav>
 
       <AnimatePresence>
@@ -1164,5 +1185,3 @@ export default function App() {
     </div>
   );
 }
-
- 

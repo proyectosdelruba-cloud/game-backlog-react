@@ -699,3 +699,57 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ============================================
+   GAMEBOX — CAPA GLOBAL "APPLE STYLE"
+   ============================================ */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Reset + curva de easing "Apple" (ease-out expo) heredada por todo botón */
+button {
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+button:active { transform: scale(0.96); }
+
+/* Scrollbar premium — fino, discreto, visible solo si hace falta */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.12) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.12); border-radius: 10px; }
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.22); }
+
+/* Tokens de cristal reutilizables en cualquier tarjeta ya existente */
+:root {
+  --glass-bg: rgba(23, 23, 28, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --radius-squircle: 26px;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-squircle);
+}
+
+/* Shimmer — la animación detrás de todos los skeletons del Pilar 2 */
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: rgba(255,255,255,0.06); }
+  button:active { transform: none; }
+}
