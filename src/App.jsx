@@ -575,7 +575,7 @@ function PestanaPerfil({
           </>
         )}
 
-        <div className="flex items-center justify-center gap-5 mb-5">
+        <div className="flex flex-wrap items-center justify-center gap-5 mb-5 w-full">
           <ProgressRing
             completados={totalCompletados}
             total={totalJugando + totalCompletados + totalPendientes + totalDropeados}
@@ -583,7 +583,7 @@ function PestanaPerfil({
           <DailyStreak racha={racha} />
         </div>
 
-        <div className="estadisticas">
+        <div className="estadisticas flex-wrap">
           <div className="stat"><span className="stat-numero">{totalJugando}</span><span className="stat-label">Jugando</span></div>
           <div className="stat"><span className="stat-numero">{totalCompletados}</span><span className="stat-label">Completados</span></div>
           <div className="stat"><span className="stat-numero">{totalPendientes}</span><span className="stat-label">Pendientes</span></div>
@@ -1049,19 +1049,21 @@ export default function App() {
   const esFavoritoActual = entradaDeJuegoActual?.is_favorite ?? false;
 
   return (
-    <div className="app-shell flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+    <div
+      className="app-shell w-full flex flex-col overflow-hidden overflow-x-hidden"
+      style={{ height: '100dvh', maxWidth: 'none' }}
+    >
       <CelebracionLogro visible={!!celebrando} juegoNombre={celebrando} />
 
       <header className="app-header shrink-0">
-        <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
-        <h1>GameBox</h1>
+        <div className="flex items-center gap-2.5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto">
+          <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
+          <h1>GameBox</h1>
+        </div>
       </header>
 
-      <main
-        className="contenido-pestana flex-1 overflow-y-auto"
-        style={{ minHeight: 0 }}
-      >
-        <div className="w-full max-w-[480px] mx-auto">
+      <main className="contenido-pestana flex-1 overflow-y-auto w-full" style={{ minHeight: 0 }}>
+        <div className="w-full px-4 md:max-w-2xl lg:max-w-3xl md:mx-auto">
           <AnimatePresence mode="wait">
             {pestanaActiva === "buscar" && (
               <motion.div
@@ -1164,10 +1166,10 @@ export default function App() {
                 ) : usuarioSeleccionado ? (
                   <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
                 ) : (
-                  <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-5 w-full">
                     <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
-                    <div>
-                      <div className="flex items-baseline justify-between mb-2">
+                    <div className="w-full">
+                      <div className="flex items-baseline justify-between mb-2 flex-wrap gap-1">
                         <h3 className="text-sm font-semibold text-gray-100">Actividad reciente</h3>
                         {feedEsGlobal && !cargandoFeed && feedReviews.length > 0 && (
                           <span className="text-[11px] text-white/40">mostrando lo más reciente</span>
@@ -1191,38 +1193,40 @@ export default function App() {
       </main>
 
       <nav className="tab-bar shrink-0">
-        <button
-          type="button"
-          className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`}
-          onClick={() => setPestanaActiva("buscar")}
-        >
-          <Search size={20} strokeWidth={2} />
-          <span className="tab-label">Buscar</span>
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${pestanaActiva === "listas" ? "activo" : ""}`}
-          onClick={() => setPestanaActiva("listas")}
-        >
-          <Gamepad2 size={20} strokeWidth={2} />
-          <span className="tab-label">Mi Lista</span>
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${pestanaActiva === "perfil" ? "activo" : ""}`}
-          onClick={() => setPestanaActiva("perfil")}
-        >
-          <User size={20} strokeWidth={2} />
-          <span className="tab-label">Perfil</span>
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`}
-          onClick={() => setPestanaActiva("comunidad")}
-        >
-          <Users size={20} strokeWidth={1.75} />
-          <span className="tab-label">Comunidad</span>
-        </button>
+        <div className="flex w-full md:max-w-2xl lg:max-w-3xl md:mx-auto">
+          <button
+            type="button"
+            className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`}
+            onClick={() => setPestanaActiva("buscar")}
+          >
+            <Search size={20} strokeWidth={2} />
+            <span className="tab-label">Buscar</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${pestanaActiva === "listas" ? "activo" : ""}`}
+            onClick={() => setPestanaActiva("listas")}
+          >
+            <Gamepad2 size={20} strokeWidth={2} />
+            <span className="tab-label">Mi Lista</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`}
+            onClick={() => setPestanaActiva("comunidad")}
+          >
+            <Users size={20} strokeWidth={1.75} />
+            <span className="tab-label">Comunidad</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${pestanaActiva === "perfil" ? "activo" : ""}`}
+            onClick={() => setPestanaActiva("perfil")}
+          >
+            <User size={20} strokeWidth={2} />
+            <span className="tab-label">Perfil</span>
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
