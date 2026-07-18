@@ -636,17 +636,62 @@ export default function App() {
   const [authCargando, setAuthCargando] = useState(false);
   const [avisoRegistro, setAvisoRegistro] = useState(null);
   const [feedReviews, setFeedReviews] = useState([]);
+  const [feedEsGlobal, setFeedEsGlobal] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [cargandoFeed, setCargandoFeed] = useState(false);
 
+  // Carga del feed de "Comunidad" con fallback: si no hay actividad de gente
+  // que sigues (o no sigues a nadie todavía), muestra las últimas reseñas
+  // públicas de toda la base de datos para que la sección nunca se vea vacía.
   useEffect(() => {
     if (pestanaActiva !== "comunidad" || !supabaseHabilitado || !user) return;
 
+    let cancelado = false;
     setCargandoFeed(true);
+
     getFollowingReviews(user.id)
-      .then(setFeedReviews)
-      .catch((err) => console.error('No se pudo cargar el feed:', err))
-      .finally(() => setCargandoFeed(false));
+      .then(async (reviews) => {
+        if (cancelado) return;
+
+        if (reviews.length > 0) {
+          setFeedEsGlobal(false);
+          setFeedReviews(reviews);
+          return;
+        }
+
+        const { data, error: errorGlobal } = await supabase
+          .from('user_games')
+          .select(`
+            id, name, background_image, puntuacion, resena, fecha_guardado, user_id,
+            profiles ( username, avatar_url ),
+            review_likes ( user_id )
+          `)
+          .not('resena', 'eq', '')
+          .order('fecha_guardado', { ascending: false })
+          .limit(20);
+
+        if (errorGlobal) {
+          console.error('No se pudo cargar el feed global:', errorGlobal);
+          return;
+        }
+
+        if (!cancelado) {
+          setFeedEsGlobal(true);
+          setFeedReviews((data || []).map(r => ({
+            ...r,
+            likesCount: r.review_likes.length,
+            likedByMe: r.review_likes.some(l => l.user_id === user.id),
+          })));
+        }
+      })
+      .catch((err) => {
+        if (!cancelado) console.error('No se pudo cargar el feed:', err);
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoFeed(false);
+      });
+
+    return () => { cancelado = true; };
   }, [pestanaActiva, user]);
 
   const manejarLikeEnFeed = useCallback(async (reviewId) => {
@@ -1004,137 +1049,148 @@ export default function App() {
   const esFavoritoActual = entradaDeJuegoActual?.is_favorite ?? false;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
       <CelebracionLogro visible={!!celebrando} juegoNombre={celebrando} />
-      <header className="app-header">
+
+      <header className="app-header shrink-0">
         <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
         <h1>GameBox</h1>
       </header>
 
-      <main className="contenido-pestana">
-        <AnimatePresence mode="wait">
-          {pestanaActiva === "buscar" && (
-            <motion.div
-              key="buscar"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.15 }}
-            >
-              <PestanaBuscar
-                terminoBusqueda={terminoBusqueda}
-                setTerminoBusqueda={setTerminoBusqueda}
-                resultadosBusqueda={resultadosBusqueda}
-                buscando={buscando}
-                onBuscar={buscarPorTexto}
-                onAleatorio={buscarJuegoAleatorio}
-                cargando={cargando}
-                error={error}
-                juego={juego}
-                estadoActivo={estadoActivo}
-                puntuacion={puntuacion}
-                setPuntuacion={setPuntuacion}
-                resenaTexto={resenaTexto}
-                setResenaTexto={setResenaTexto}
-                onActualizarEstado={actualizarEstado}
-                onGuardarResena={guardarResena}
-                onSeleccionar={seleccionarJuego}
-                esFavoritoActual={esFavoritoActual}
-                onToggleFavorito={alternarFavorito}
-                errorFavoritos={errorFavoritos}
-                juegosTendencia={juegosTendencia}
-              />
-            </motion.div>
-          )}
+      <main
+        className="contenido-pestana flex-1 overflow-y-auto"
+        style={{ minHeight: 0 }}
+      >
+        <div className="w-full max-w-[480px] mx-auto">
+          <AnimatePresence mode="wait">
+            {pestanaActiva === "buscar" && (
+              <motion.div
+                key="buscar"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.15 }}
+              >
+                <PestanaBuscar
+                  terminoBusqueda={terminoBusqueda}
+                  setTerminoBusqueda={setTerminoBusqueda}
+                  resultadosBusqueda={resultadosBusqueda}
+                  buscando={buscando}
+                  onBuscar={buscarPorTexto}
+                  onAleatorio={buscarJuegoAleatorio}
+                  cargando={cargando}
+                  error={error}
+                  juego={juego}
+                  estadoActivo={estadoActivo}
+                  puntuacion={puntuacion}
+                  setPuntuacion={setPuntuacion}
+                  resenaTexto={resenaTexto}
+                  setResenaTexto={setResenaTexto}
+                  onActualizarEstado={actualizarEstado}
+                  onGuardarResena={guardarResena}
+                  onSeleccionar={seleccionarJuego}
+                  esFavoritoActual={esFavoritoActual}
+                  onToggleFavorito={alternarFavorito}
+                  errorFavoritos={errorFavoritos}
+                  juegosTendencia={juegosTendencia}
+                />
+              </motion.div>
+            )}
 
-          {pestanaActiva === "listas" && (
-            <motion.div
-              key="listas"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.15 }}
-            >
-              <PestanaListas
-                jugando={jugando}
-                completados={completados}
-                pendientes={pendientes}
-                dropeados={dropeados}
-                categoriaAbierta={categoriaAbierta}
-                onToggleCategoria={alternarCategoria}
-                onAbrir={setJuegoSeleccionadoModal}
-                onEliminar={eliminarDelBacklog}
-                onAccionPrincipal={manejarAccionPrincipal}
-              />
-            </motion.div>
-          )}
+            {pestanaActiva === "listas" && (
+              <motion.div
+                key="listas"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.15 }}
+              >
+                <PestanaListas
+                  jugando={jugando}
+                  completados={completados}
+                  pendientes={pendientes}
+                  dropeados={dropeados}
+                  categoriaAbierta={categoriaAbierta}
+                  onToggleCategoria={alternarCategoria}
+                  onAbrir={setJuegoSeleccionadoModal}
+                  onEliminar={eliminarDelBacklog}
+                  onAccionPrincipal={manejarAccionPrincipal}
+                />
+              </motion.div>
+            )}
 
-          {pestanaActiva === "perfil" && (
-            <motion.div
-              key="perfil"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.15 }}
-            >
-              <PestanaPerfil
-                supabaseHabilitado={supabaseHabilitado}
-                sesionCargando={sesionCargando}
-                user={user}
-                authError={authError}
-                authCargando={authCargando}
-                avisoRegistro={avisoRegistro}
-                onLogin={iniciarSesion}
-                onRegistro={registrarse}
-                onLogout={cerrarSesion}
-                nombreUsuario={nombreUsuario}
-                onCambiarNombre={setNombreUsuario}
-                totalJugando={jugando.length}
-                totalCompletados={completados.length}
-                totalPendientes={pendientes.length}
-                totalDropeados={dropeados.length}
-                favoritos={favoritos}
-                perfil={perfil}
-                onPerfilActualizado={onPerfilActualizado}
-                racha={racha}
-              />
-            </motion.div>
-          )}
+            {pestanaActiva === "perfil" && (
+              <motion.div
+                key="perfil"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.15 }}
+              >
+                <PestanaPerfil
+                  supabaseHabilitado={supabaseHabilitado}
+                  sesionCargando={sesionCargando}
+                  user={user}
+                  authError={authError}
+                  authCargando={authCargando}
+                  avisoRegistro={avisoRegistro}
+                  onLogin={iniciarSesion}
+                  onRegistro={registrarse}
+                  onLogout={cerrarSesion}
+                  nombreUsuario={nombreUsuario}
+                  onCambiarNombre={setNombreUsuario}
+                  totalJugando={jugando.length}
+                  totalCompletados={completados.length}
+                  totalPendientes={pendientes.length}
+                  totalDropeados={dropeados.length}
+                  favoritos={favoritos}
+                  perfil={perfil}
+                  onPerfilActualizado={onPerfilActualizado}
+                  racha={racha}
+                />
+              </motion.div>
+            )}
 
-          {pestanaActiva === "comunidad" && (
-            <motion.div
-              key="comunidad"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.15 }}
-            >
-              {!supabaseHabilitado || !user ? (
-                <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
-              ) : usuarioSeleccionado ? (
-                <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
-              ) : (
-                <div className="flex flex-col gap-5">
-                  <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-100 mb-2">Actividad reciente</h3>
-                    {cargandoFeed ? (
-                      <div className="flex flex-col gap-3">
-                        <SkeletonReviewCard />
-                        <SkeletonReviewCard />
+            {pestanaActiva === "comunidad" && (
+              <motion.div
+                key="comunidad"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.15 }}
+              >
+                {!supabaseHabilitado || !user ? (
+                  <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
+                ) : usuarioSeleccionado ? (
+                  <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
+                ) : (
+                  <div className="flex flex-col gap-5">
+                    <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
+                    <div>
+                      <div className="flex items-baseline justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-gray-100">Actividad reciente</h3>
+                        {feedEsGlobal && !cargandoFeed && feedReviews.length > 0 && (
+                          <span className="text-[11px] text-white/40">mostrando lo más reciente</span>
+                        )}
                       </div>
-                    ) : (
-                      <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
-                    )}
+                      {cargandoFeed ? (
+                        <div className="flex flex-col gap-3">
+                          <SkeletonReviewCard />
+                          <SkeletonReviewCard />
+                        </div>
+                      ) : (
+                        <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
 
-      <nav className="tab-bar">
+      <nav className="tab-bar shrink-0">
         <button
           type="button"
           className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`}
