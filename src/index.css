@@ -14,17 +14,16 @@
   box-sizing: border-box;
 }
 
-/* AQUÍ ES EL SITIO PERFECTO: Controla el zoom en dispositivos móviles */
+/* Controla el zoom y el comportamiento táctil en dispositivos móviles */
 html, body {
   touch-action: manipulation;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   background-color: #121214;
   font-family: 'Inter', sans-serif;
   color: #e5e5e5;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
