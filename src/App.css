@@ -1,3 +1,6 @@
+html, body {
+  touch-action: manipulation;
+}
 :root {
   --bg-deep: #0E0E11;
   --bg-surface: #17171C;
