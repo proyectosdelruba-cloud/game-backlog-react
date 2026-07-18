@@ -1049,118 +1049,61 @@ export default function App() {
   const esFavoritoActual = entradaDeJuegoActual?.is_favorite ?? false;
 
   return (
+  <div className="w-full min-h-[100dvh] bg-[#0E0E11]">
     <div
-      className="app-shell w-full flex flex-col overflow-hidden overflow-x-hidden"
-      style={{ height: '100dvh', maxWidth: 'none' }}
+      className="app-shell w-full md:max-w-2xl lg:max-w-3xl md:mx-auto flex flex-col overflow-hidden overflow-x-hidden md:border-x md:border-white/5 md:shadow-2xl"
+      style={{ height: '100dvh' }}
     >
       <CelebracionLogro visible={!!celebrando} juegoNombre={celebrando} />
 
       <header className="app-header shrink-0">
-        <div className="flex items-center gap-2.5 w-full md:max-w-2xl lg:max-w-3xl md:mx-auto">
-          <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
-          <h1>GameBox</h1>
-        </div>
+        <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
+        <h1>GameBox</h1>
       </header>
 
       <main className="contenido-pestana flex-1 overflow-y-auto w-full" style={{ minHeight: 0 }}>
-        <div className="w-full px-4 md:max-w-2xl lg:max-w-3xl md:mx-auto">
+        <div className="w-full px-4">
           <AnimatePresence mode="wait">
             {pestanaActiva === "buscar" && (
-              <motion.div
-                key="buscar"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="buscar" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.15 }}>
                 <PestanaBuscar
-                  terminoBusqueda={terminoBusqueda}
-                  setTerminoBusqueda={setTerminoBusqueda}
-                  resultadosBusqueda={resultadosBusqueda}
-                  buscando={buscando}
-                  onBuscar={buscarPorTexto}
-                  onAleatorio={buscarJuegoAleatorio}
-                  cargando={cargando}
-                  error={error}
-                  juego={juego}
-                  estadoActivo={estadoActivo}
-                  puntuacion={puntuacion}
-                  setPuntuacion={setPuntuacion}
-                  resenaTexto={resenaTexto}
-                  setResenaTexto={setResenaTexto}
-                  onActualizarEstado={actualizarEstado}
-                  onGuardarResena={guardarResena}
-                  onSeleccionar={seleccionarJuego}
-                  esFavoritoActual={esFavoritoActual}
-                  onToggleFavorito={alternarFavorito}
-                  errorFavoritos={errorFavoritos}
-                  juegosTendencia={juegosTendencia}
+                  terminoBusqueda={terminoBusqueda} setTerminoBusqueda={setTerminoBusqueda}
+                  resultadosBusqueda={resultadosBusqueda} buscando={buscando} onBuscar={buscarPorTexto}
+                  onAleatorio={buscarJuegoAleatorio} cargando={cargando} error={error} juego={juego}
+                  estadoActivo={estadoActivo} puntuacion={puntuacion} setPuntuacion={setPuntuacion}
+                  resenaTexto={resenaTexto} setResenaTexto={setResenaTexto} onActualizarEstado={actualizarEstado}
+                  onGuardarResena={guardarResena} onSeleccionar={seleccionarJuego} esFavoritoActual={esFavoritoActual}
+                  onToggleFavorito={alternarFavorito} errorFavoritos={errorFavoritos} juegosTendencia={juegosTendencia}
                 />
               </motion.div>
             )}
 
             {pestanaActiva === "listas" && (
-              <motion.div
-                key="listas"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="listas" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.15 }}>
                 <PestanaListas
-                  jugando={jugando}
-                  completados={completados}
-                  pendientes={pendientes}
-                  dropeados={dropeados}
-                  categoriaAbierta={categoriaAbierta}
-                  onToggleCategoria={alternarCategoria}
-                  onAbrir={setJuegoSeleccionadoModal}
-                  onEliminar={eliminarDelBacklog}
-                  onAccionPrincipal={manejarAccionPrincipal}
+                  jugando={jugando} completados={completados} pendientes={pendientes} dropeados={dropeados}
+                  categoriaAbierta={categoriaAbierta} onToggleCategoria={alternarCategoria}
+                  onAbrir={setJuegoSeleccionadoModal} onEliminar={eliminarDelBacklog} onAccionPrincipal={manejarAccionPrincipal}
                 />
               </motion.div>
             )}
 
             {pestanaActiva === "perfil" && (
-              <motion.div
-                key="perfil"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="perfil" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.15 }}>
                 <PestanaPerfil
-                  supabaseHabilitado={supabaseHabilitado}
-                  sesionCargando={sesionCargando}
-                  user={user}
-                  authError={authError}
-                  authCargando={authCargando}
-                  avisoRegistro={avisoRegistro}
-                  onLogin={iniciarSesion}
-                  onRegistro={registrarse}
-                  onLogout={cerrarSesion}
-                  nombreUsuario={nombreUsuario}
-                  onCambiarNombre={setNombreUsuario}
-                  totalJugando={jugando.length}
-                  totalCompletados={completados.length}
-                  totalPendientes={pendientes.length}
-                  totalDropeados={dropeados.length}
-                  favoritos={favoritos}
-                  perfil={perfil}
-                  onPerfilActualizado={onPerfilActualizado}
-                  racha={racha}
+                  supabaseHabilitado={supabaseHabilitado} sesionCargando={sesionCargando} user={user}
+                  authError={authError} authCargando={authCargando} avisoRegistro={avisoRegistro}
+                  onLogin={iniciarSesion} onRegistro={registrarse} onLogout={cerrarSesion}
+                  nombreUsuario={nombreUsuario} onCambiarNombre={setNombreUsuario}
+                  totalJugando={jugando.length} totalCompletados={completados.length}
+                  totalPendientes={pendientes.length} totalDropeados={dropeados.length}
+                  favoritos={favoritos} perfil={perfil} onPerfilActualizado={onPerfilActualizado} racha={racha}
                 />
               </motion.div>
             )}
 
             {pestanaActiva === "comunidad" && (
-              <motion.div
-                key="comunidad"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.15 }}
-              >
+              <motion.div key="comunidad" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.15 }}>
                 {!supabaseHabilitado || !user ? (
                   <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
                 ) : usuarioSeleccionado ? (
@@ -1176,10 +1119,7 @@ export default function App() {
                         )}
                       </div>
                       {cargandoFeed ? (
-                        <div className="flex flex-col gap-3">
-                          <SkeletonReviewCard />
-                          <SkeletonReviewCard />
-                        </div>
+                        <div className="flex flex-col gap-3"><SkeletonReviewCard /><SkeletonReviewCard /></div>
                       ) : (
                         <SocialFeed reviews={feedReviews} onToggleLike={manejarLikeEnFeed} onSelectUser={verPerfilDeUsuario} />
                       )}
@@ -1193,40 +1133,18 @@ export default function App() {
       </main>
 
       <nav className="tab-bar shrink-0">
-        <div className="flex w-full md:max-w-2xl lg:max-w-3xl md:mx-auto">
-          <button
-            type="button"
-            className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`}
-            onClick={() => setPestanaActiva("buscar")}
-          >
-            <Search size={20} strokeWidth={2} />
-            <span className="tab-label">Buscar</span>
-          </button>
-          <button
-            type="button"
-            className={`tab-btn ${pestanaActiva === "listas" ? "activo" : ""}`}
-            onClick={() => setPestanaActiva("listas")}
-          >
-            <Gamepad2 size={20} strokeWidth={2} />
-            <span className="tab-label">Mi Lista</span>
-          </button>
-          <button
-            type="button"
-            className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`}
-            onClick={() => setPestanaActiva("comunidad")}
-          >
-            <Users size={20} strokeWidth={1.75} />
-            <span className="tab-label">Comunidad</span>
-          </button>
-          <button
-            type="button"
-            className={`tab-btn ${pestanaActiva === "perfil" ? "activo" : ""}`}
-            onClick={() => setPestanaActiva("perfil")}
-          >
-            <User size={20} strokeWidth={2} />
-            <span className="tab-label">Perfil</span>
-          </button>
-        </div>
+        <button type="button" className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`} onClick={() => setPestanaActiva("buscar")}>
+          <Search size={20} strokeWidth={2} /><span className="tab-label">Buscar</span>
+        </button>
+        <button type="button" className={`tab-btn ${pestanaActiva === "listas" ? "activo" : ""}`} onClick={() => setPestanaActiva("listas")}>
+          <Gamepad2 size={20} strokeWidth={2} /><span className="tab-label">Mi Lista</span>
+        </button>
+        <button type="button" className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`} onClick={() => setPestanaActiva("comunidad")}>
+          <Users size={20} strokeWidth={1.75} /><span className="tab-label">Comunidad</span>
+        </button>
+        <button type="button" className={`tab-btn ${pestanaActiva === "perfil" ? "activo" : ""}`} onClick={() => setPestanaActiva("perfil")}>
+          <User size={20} strokeWidth={2} /><span className="tab-label">Perfil</span>
+        </button>
       </nav>
 
       <AnimatePresence>
@@ -1243,5 +1161,6 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
-  );
+  </div>
+);
 }

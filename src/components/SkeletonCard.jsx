@@ -5,7 +5,7 @@ export function SkeletonPosterGrid() {
   return (
     <div className="grid grid-cols-3 gap-3 animate-pulse">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="aspect-[2/3] bg-gray-800 rounded-lg"></div>
+        <div key={i} className="aspect-2/3 bg-gray-800 rounded-lg"></div>
       ))}
     </div>
   );

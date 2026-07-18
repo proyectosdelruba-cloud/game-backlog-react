@@ -21,7 +21,6 @@ html, body {
 
 .app-shell {
   width: 100%;
-  max-width: 480px;
   height: 100vh;
   margin: 0 auto;
   display: flex;
