@@ -1134,7 +1134,7 @@ useEffect(() => {
                 {!supabaseHabilitado || !user ? (
                   <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
                 ) : usuarioSeleccionado ? (
-                  <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} />
+                  <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} misJuegos={backlog} />
                 ) : (
                   <div className="flex flex-col gap-5 w-full">
                     <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
@@ -1164,7 +1164,7 @@ useEffect(() => {
           <Search size={20} strokeWidth={2} /><span className="tab-label">Buscar</span>
         </button>
         <button type="button" className={`tab-btn ${pestanaActiva === "listas" ? "activo" : ""}`} onClick={() => setPestanaActiva("listas")}>
-          <Gamepad2 size={20} strokeWidth={2} /><span className="tab-label">Mi Lista</span>
+          <Gamepad2 size={20} strokeWidth={2} /><span className="tab-label">Mi GameBox</span>
         </button>
         <button type="button" className={`tab-btn ${pestanaActiva === "comunidad" ? "activo" : ""}`} onClick={() => setPestanaActiva("comunidad")}>
           <Users size={20} strokeWidth={1.75} /><span className="tab-label">Comunidad</span>

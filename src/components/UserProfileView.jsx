@@ -1,10 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ArrowLeft, UserPlus, UserMinus, Loader2, Heart, Star, Sparkles,
   Gamepad2, CircleCheck, Bookmark, CircleX, ChevronDown, ImageOff, Users
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { getPerfilPublico, getFollowingIds, followUser, unfollowUser } from '../services/socialService';
-import { calcularNivelGamer } from '../lib/gamification';
+import { calcularNivelGamer, calcularCompatibilidad } from '../lib/gamification';
+
+function celebrarMatch() {
+  confetti({
+    particleCount: 80,
+    spread: 70,
+    origin: { y: 0.5 },
+    colors: ['#EF4444', '#F472B6', '#FFFFFF'],
+    disableForReducedMotion: true,
+  });
+}
 
 function PosterMini({ juego }) {
   return (
@@ -64,7 +75,7 @@ function SeccionLista({ titulo, Icono, juegos, abierta, onToggle }) {
   );
 }
 
-export default function UserProfileView({ userId, currentUserId, onVolver }) {
+export default function UserProfileView({ userId, currentUserId, onVolver, misJuegos }) {
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -104,6 +115,18 @@ export default function UserProfileView({ userId, currentUserId, onVolver }) {
     }
     setProcesandoFollow(false);
   }, [sigo, procesandoFollow, currentUserId, userId]);
+
+  const compatibilidad = useMemo(() => {
+  if (!datos || currentUserId === userId) return null;
+  const completadosDelOtro = datos.juegos.filter(j => j.status === 'completado');
+  return calcularCompatibilidad(misJuegos || [], completadosDelOtro);
+}, [datos, currentUserId, userId, misJuegos]);
+
+useEffect(() => {
+  if (compatibilidad && compatibilidad.porcentaje > 90) {
+    celebrarMatch();
+  }
+}, [compatibilidad]);
 
   if (cargando) {
     return <p className="flex items-center gap-2 text-sm text-muted py-6"><Loader2 size={14} className="animate-spin" /> Cargando perfil...</p>;
@@ -169,6 +192,23 @@ export default function UserProfileView({ userId, currentUserId, onVolver }) {
             {procesandoFollow ? 'Un momento' : sigo ? 'Dejar de seguir' : 'Seguir'}
           </button>
         )}
+
+{compatibilidad && (
+  <div className={`mt-1 flex items-center gap-2 rounded-full px-4 py-2 border ${
+    compatibilidad.porcentaje > 90
+      ? 'bg-gradient-to-r from-pink-500/20 to-red-500/20 border-pink-400/40'
+      : 'bg-white/5 border-white/10'
+  }`}>
+    <Heart
+      size={14} strokeWidth={2}
+      className={compatibilidad.porcentaje > 90 ? 'text-pink-400' : 'text-white/60'}
+      fill={compatibilidad.porcentaje > 90 ? 'currentColor' : 'none'}
+    />
+    <span className="text-sm font-bold text-gray-100">{compatibilidad.porcentaje}% compatible</span>
+    <span className="text-xs text-white/40">· {compatibilidad.juegosCompartidos} en común</span>
+  </div>
+)}
+
       </div>
 
       {favoritos.length > 0 && (
