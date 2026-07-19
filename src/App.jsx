@@ -12,7 +12,7 @@ import EditarPerfil from './components/EditarPerfil';
 import { obtenerPerfil, actualizarRachaDiaria } from './perfilService';
 import UserSearch from './components/UserSearch';
 import SocialFeed from './components/SocialFeed';
-import { getFollowingReviews, toggleLikeReview } from './services/socialService';
+import { getFollowingReviews, toggleLikeReview, getActividadGlobal } from './services/socialService';
 import UserProfileView from './components/UserProfileView';
 import { SkeletonPosterGrid, SkeletonReviewCard } from './components/SkeletonCard';
 import { ProgressRing, DailyStreak } from './components/ProgressRing';
@@ -643,56 +643,57 @@ export default function App() {
   // Carga del feed de "Comunidad" con fallback: si no hay actividad de gente
   // que sigues (o no sigues a nadie todavía), muestra las últimas reseñas
   // públicas de toda la base de datos para que la sección nunca se vea vacía.
-  useEffect(() => {
-    if (pestanaActiva !== "comunidad" || !supabaseHabilitado || !user) return;
+useEffect(() => {
+  if (pestanaActiva !== "comunidad" || !supabaseHabilitado || !user) return;
 
-    let cancelado = false;
-    setCargandoFeed(true);
+  let cancelado = false;
+  setCargandoFeed(true);
 
-    getFollowingReviews(user.id)
-      .then(async (reviews) => {
-        if (cancelado) return;
+  async function cargarFeed() {
+    try {
+      let reviews = await getFollowingReviews(user.id);
+      let esGlobal = reviews.length > 0 ? false : true;
 
-        if (reviews.length > 0) {
-          setFeedEsGlobal(false);
-          setFeedReviews(reviews);
-          return;
-        }
-
-        const { data, error: errorGlobal } = await supabase
+      if (reviews.length === 0) {
+        const { data } = await supabase
           .from('user_games')
           .select(`
             id, name, background_image, puntuacion, resena, fecha_guardado, user_id,
-            profiles ( username, avatar_url ),
+            profiles!user_games_user_id_profiles_fkey ( username, avatar_url ),
             review_likes ( user_id )
           `)
           .not('resena', 'eq', '')
           .order('fecha_guardado', { ascending: false })
           .limit(20);
 
-        if (errorGlobal) {
-          console.error('No se pudo cargar el feed global:', errorGlobal);
-          return;
-        }
+        reviews = (data || []).map(r => ({
+          ...r,
+          likesCount: r.review_likes.length,
+          likedByMe: r.review_likes.some(l => l.user_id === user.id),
+        }));
+      }
 
-        if (!cancelado) {
-          setFeedEsGlobal(true);
-          setFeedReviews((data || []).map(r => ({
-            ...r,
-            likesCount: r.review_likes.length,
-            likedByMe: r.review_likes.some(l => l.user_id === user.id),
-          })));
-        }
-      })
-      .catch((err) => {
-        if (!cancelado) console.error('No se pudo cargar el feed:', err);
-      })
-      .finally(() => {
-        if (!cancelado) setCargandoFeed(false);
-      });
+      const eventos = await getActividadGlobal();
 
-    return () => { cancelado = true; };
-  }, [pestanaActiva, user]);
+      const combinado = [
+        ...reviews.map(r => ({ ...r, tipo: 'review', fecha: r.fecha_guardado })),
+        ...eventos.map(e => ({ ...e, tipo: 'evento', fecha: e.created_at })),
+      ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 20);
+
+      if (!cancelado) {
+        setFeedEsGlobal(esGlobal);
+        setFeedReviews(combinado);
+      }
+    } catch (err) {
+      if (!cancelado) console.error('No se pudo cargar el feed:', err);
+    } finally {
+      if (!cancelado) setCargandoFeed(false);
+    }
+  }
+
+  cargarFeed();
+  return () => { cancelado = true; };
+}, [pestanaActiva, user]);
 
   const manejarLikeEnFeed = useCallback(async (reviewId) => {
     const aplicarToggle = (lista) => lista.map(r =>

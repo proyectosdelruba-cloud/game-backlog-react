@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, Sparkles } from 'lucide-react';
 
 function formatearFecha(fechaISO) {
   return fechaISO ? new Date(fechaISO).toLocaleDateString() : '';
@@ -47,11 +47,30 @@ function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
     return <p className="text-sm text-muted text-center py-6">Sigue a otros jugadores para ver sus reseñas aquí.</p>;
   }
 
+  function TarjetaEvento({ evento }) {
+  const nombre = evento.profiles?.username ?? evento.metadata?.username ?? 'Alguien';
+
+  return (
+    <div className="bg-surface border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
+        <Sparkles size={14} strokeWidth={2} className="text-accent" />
+      </div>
+      <p className="text-sm text-gray-300">
+        <span className="font-semibold text-gray-100">{nombre}</span> se ha unido a GameBox
+      </p>
+    </div>
+  );
+}
+
   return (
     <div className="flex flex-col gap-3">
-      {reviews.map((review) => (
-        <TarjetaReview key={review.id} review={review} onToggleLike={onToggleLike} onSelectUser={onSelectUser} />
-      ))}
+      {reviews.map((item) =>
+  item.tipo === 'evento' ? (
+    <TarjetaEvento key={`evento-${item.id}`} evento={item} />
+  ) : (
+    <TarjetaReview key={item.id} review={item} onToggleLike={onToggleLike} onSelectUser={onSelectUser} />
+  )
+)}
     </div>
   );
 }

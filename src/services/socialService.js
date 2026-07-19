@@ -44,7 +44,7 @@ export async function getFollowingReviews(userId) {
     .from('user_games')
     .select(`
       id, name, background_image, puntuacion, resena, fecha_guardado, user_id,
-      profiles ( username, avatar_url ),
+     profiles!user_games_user_id_profiles_fkey ( username, avatar_url ),
       review_likes ( user_id )
     `)
     .in('user_id', idsSeguidos)
@@ -117,4 +117,18 @@ export async function getPerfilPublico(userId) {
   const { seguidores, seguidos } = await getContadoresSociales(userId);
 
   return { perfil, juegos: juegos || [], totalSeguidores: seguidores, totalSeguidos: seguidos };
+}
+
+export async function getActividadGlobal(limite = 10) {
+  const { data, error } = await supabase
+    .from('actividad_global')
+    .select(`
+      id, tipo, metadata, created_at,
+      profiles ( username, avatar_url )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limite);
+
+  if (error) throw error;
+  return data;
 }
