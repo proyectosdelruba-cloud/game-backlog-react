@@ -17,6 +17,7 @@ import UserProfileView from './components/UserProfileView';
 import { SkeletonPosterGrid, SkeletonReviewCard } from './components/SkeletonCard';
 import { ProgressRing, DailyStreak } from './components/ProgressRing';
 import { CelebracionLogro } from './components/CelebracionLogro';
+import PlaylistsPanel from './components/PlaylistsPanel';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -473,7 +474,8 @@ function PestanaBuscar({
 function PestanaListas({
   jugando, completados, pendientes, dropeados,
   categoriaAbierta, onToggleCategoria,
-  onAbrir, onEliminar, onAccionPrincipal
+  onAbrir, onEliminar, onAccionPrincipal,
+  userId, backlogCompleto
 }) {
   const categorias = [
     { key: "jugando", titulo: "Jugando actualmente", Icono: Gamepad2, lista: jugando },
@@ -511,6 +513,26 @@ function PestanaListas({
           )}
         </SeccionDesplegable>
       ))}
+      <div className="acordeon-seccion" style={{ marginTop: '10px' }}>
+        <button
+          type="button"
+          className="acordeon-header"
+          onClick={() => onToggleCategoria('playlists')}
+          aria-expanded={categoriaAbierta === 'playlists'}
+        >
+          <span className="acordeon-titulo">Mis Playlists</span>
+          <ChevronDown
+            size={16}
+            strokeWidth={1.75}
+            style={{ transform: categoriaAbierta === 'playlists' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+          />
+        </button>
+        {categoriaAbierta === 'playlists' && (
+          <div className="acordeon-body">
+            <PlaylistsPanel userId={userId} backlog={backlogCompleto} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1085,7 +1107,8 @@ useEffect(() => {
                   jugando={jugando} completados={completados} pendientes={pendientes} dropeados={dropeados}
                   categoriaAbierta={categoriaAbierta} onToggleCategoria={alternarCategoria}
                   onAbrir={setJuegoSeleccionadoModal} onEliminar={eliminarDelBacklog} onAccionPrincipal={manejarAccionPrincipal}
-                />
+                  userId={user?.id} backlogCompleto={backlog}
+/>
               </motion.div>
             )}
 

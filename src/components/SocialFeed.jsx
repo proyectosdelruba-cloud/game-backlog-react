@@ -43,13 +43,13 @@ const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike, onSele
 });
 
 function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
+
+function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
   if (reviews.length === 0) {
     return <p className="text-sm text-muted text-center py-6">Sigue a otros jugadores para ver sus reseñas aquí.</p>;
   }
 
-  function TarjetaEvento({ evento }) {
-  const nombre = evento.profiles?.username ?? evento.metadata?.username ?? 'Alguien';
-
+  
   return (
     <div className="bg-surface border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
       <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
