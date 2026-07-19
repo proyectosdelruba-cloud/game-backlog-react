@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import {
   Search, Shuffle, Gamepad2, CircleCheck, Bookmark, CircleX,
   Heart, Star, X, ChevronDown, User, Users, LogOut, Sparkles, Eye,
-  Pencil, Undo2, Loader2, ImageOff, TrendingUp
+  Pencil, Undo2, Loader2, ImageOff, TrendingUp, ListMusic
 } from 'lucide-react';
 import { supabase, supabaseHabilitado } from './supabaseClient';
 import './App.css';
@@ -520,7 +520,10 @@ function PestanaListas({
           onClick={() => onToggleCategoria('playlists')}
           aria-expanded={categoriaAbierta === 'playlists'}
         >
-          <span className="acordeon-titulo">Mis Playlists</span>
+          <span className="acordeon-titulo">
+          <ListMusic size={16} strokeWidth={1.75} />
+  Mis Playlists
+</span>
           <ChevronDown
             size={16}
             strokeWidth={1.75}
