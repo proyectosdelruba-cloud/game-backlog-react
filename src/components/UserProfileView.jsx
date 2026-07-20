@@ -17,10 +17,13 @@ function celebrarMatch() {
   });
 }
 
-function PosterMini({ juego }) {
+function PosterMini({ juego, onAbrirHub }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="relative rounded-lg overflow-hidden aspect-[2/3] bg-surface">
+      <div
+  className="relative rounded-lg overflow-hidden aspect-[2/3] bg-surface cursor-pointer"
+  onClick={() => onAbrirHub && onAbrirHub(juego)}
+>
         {juego.background_image ? (
           <img src={juego.background_image} alt={juego.name} className="w-full h-full object-cover" />
         ) : (
@@ -66,7 +69,7 @@ function SeccionLista({ titulo, Icono, juegos, abierta, onToggle }) {
             <p className="text-xs text-muted">Nada por aquí todavía.</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-              {juegos.map((j) => <PosterMini key={j.id} juego={j} />)}
+              {juegos.map((j) => <PosterMini key={j.id} juego={j} onAbrirHub={onAbrirHub} />)}
             </div>
           )}
         </div>
@@ -75,7 +78,7 @@ function SeccionLista({ titulo, Icono, juegos, abierta, onToggle }) {
   );
 }
 
-export default function UserProfileView({ userId, currentUserId, onVolver, misJuegos }) {
+export default function UserProfileView({ userId, currentUserId, onVolver, misJuegos, onAbrirHub }) {
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -217,16 +220,16 @@ useEffect(() => {
             <Sparkles size={15} strokeWidth={2} className="text-accent" /> Top favoritos
           </h3>
           <div className="grid grid-cols-5 gap-2">
-            {favoritos.map((j) => <PosterMini key={j.id} juego={j} />)}
+            {favoritos.map((j) => <PosterMini key={j.id} juego={j} onAbrirHub={onAbrirHub} />)}
           </div>
         </div>
       )}
 
       <div className="flex flex-col gap-2.5">
-        <SeccionLista titulo="Jugando actualmente" Icono={Gamepad2} juegos={jugando} abierta={seccionAbierta === 'jugando'} onToggle={() => setSeccionAbierta(p => p === 'jugando' ? null : 'jugando')} />
-        <SeccionLista titulo="Completados" Icono={CircleCheck} juegos={completados} abierta={seccionAbierta === 'completado'} onToggle={() => setSeccionAbierta(p => p === 'completado' ? null : 'completado')} />
-        <SeccionLista titulo="Pendientes" Icono={Bookmark} juegos={pendientes} abierta={seccionAbierta === 'pendiente'} onToggle={() => setSeccionAbierta(p => p === 'pendiente' ? null : 'pendiente')} />
-        <SeccionLista titulo="Dropeados" Icono={CircleX} juegos={dropeados} abierta={seccionAbierta === 'dropeado'} onToggle={() => setSeccionAbierta(p => p === 'dropeado' ? null : 'dropeado')} />
+        <SeccionLista titulo="Jugando actualmente" Icono={Gamepad2} juegos={jugando} abierta={seccionAbierta === 'jugando'} onToggle={() => setSeccionAbierta(p => p === 'jugando' ? null : 'jugando')} onAbrirHub={onAbrirHub} />
+        <SeccionLista titulo="Completados" Icono={CircleCheck} juegos={completados} abierta={seccionAbierta === 'completado'} onToggle={() => setSeccionAbierta(p => p === 'completado' ? null : 'completado')} onAbrirHub={onAbrirHub} />
+        <SeccionLista titulo="Pendientes" Icono={Bookmark} juegos={pendientes} abierta={seccionAbierta === 'pendiente'} onToggle={() => setSeccionAbierta(p => p === 'pendiente' ? null : 'pendiente')} onAbrirHub={onAbrirHub} />
+        <SeccionLista titulo="Dropeados" Icono={CircleX} juegos={dropeados} abierta={seccionAbierta === 'dropeado'} onToggle={() => setSeccionAbierta(p => p === 'dropeado' ? null : 'dropeado')} onAbrirHub={onAbrirHub} />
       </div>
     </div>
   );

@@ -132,3 +132,18 @@ export async function getActividadGlobal(limite = 10) {
   if (error) throw error;
   return data;
 }
+
+export async function getReviewsDeJuego(gameId) {
+  const { data, error } = await supabase
+    .from('user_games')
+    .select(`
+      id, puntuacion, resena, fecha_guardado, user_id,
+      profiles!user_games_user_id_profiles_fkey ( username, avatar_url )
+    `)
+    .eq('game_id', gameId)
+    .not('resena', 'eq', '')
+    .order('fecha_guardado', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}

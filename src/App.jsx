@@ -18,6 +18,7 @@ import { SkeletonPosterGrid, SkeletonReviewCard } from './components/SkeletonCar
 import { ProgressRing, DailyStreak } from './components/ProgressRing';
 import { CelebracionLogro } from './components/CelebracionLogro';
 import PlaylistsPanel from './components/PlaylistsPanel';
+import GameReviewsHub from './components/GameReviewsHub';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -355,7 +356,7 @@ function PestanaBuscar({
   terminoBusqueda, setTerminoBusqueda, resultadosBusqueda, buscando, onBuscar,
   onAleatorio, cargando, error, juego, estadoActivo, puntuacion, setPuntuacion,
   resenaTexto, setResenaTexto, onActualizarEstado, onGuardarResena, onSeleccionar,
-  esFavoritoActual, onToggleFavorito, errorFavoritos, juegosTendencia
+  esFavoritoActual, onToggleFavorito, errorFavoritos, juegosTendencia, onAbrirHub
 }) {
   const mostrarFormularioResena = estadoActivo === "completado" || estadoActivo === "jugando";
 
@@ -412,8 +413,8 @@ function PestanaBuscar({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <PosterImage src={juego.background_image} alt={juego.name} className="portada" />
-            <h2 className="titulo-juego">{juego.name}</h2>
+            <PosterImage src={juego.background_image} alt={juego.name} className="portada" onClick={() => onAbrirHub(juego)} />
+            <h2 className="titulo-juego" onClick={() => onAbrirHub(juego)} style={{ cursor: 'pointer' }}>{juego.name}</h2>
             <div className="tags">
               <span className="tag">{obtenerGenero(juego)}</span>
               <span className="tag">{obtenerPlataforma(juego)}</span>
@@ -642,6 +643,7 @@ export default function App() {
   const [resenaTexto, setResenaTexto] = useState("");
 
   const [juegoSeleccionadoModal, setJuegoSeleccionadoModal] = useState(null);
+  const [juegoHubSeleccionado, setJuegoHubSeleccionado] = useState(null);
   const [pestanaActiva, setPestanaActiva] = useState("buscar");
   const [categoriaAbierta, setCategoriaAbierta] = useState(null);
   const [errorFavoritos, setErrorFavoritos] = useState(null);
@@ -1030,6 +1032,12 @@ useEffect(() => {
     setResenaTexto(entrada.resena);
   }, []);
 
+  const abrirHubDeJuego = useCallback((juegoOEntry) => {
+  setJuegoHubSeleccionado(identidadDesde(juegoOEntry));
+}, []);
+
+const cerrarHub = useCallback(() => setJuegoHubSeleccionado(null), []);
+
   const manejarAccionPrincipal = useCallback((entrada) => {
     if (entrada.status === "pendiente") {
       guardarEnBacklog(entrada, { status: "completado" });
@@ -1100,6 +1108,7 @@ useEffect(() => {
                   resenaTexto={resenaTexto} setResenaTexto={setResenaTexto} onActualizarEstado={actualizarEstado}
                   onGuardarResena={guardarResena} onSeleccionar={seleccionarJuego} esFavoritoActual={esFavoritoActual}
                   onToggleFavorito={alternarFavorito} errorFavoritos={errorFavoritos} juegosTendencia={juegosTendencia}
+                  onAbrirHub={abrirHubDeJuego}
                 />
               </motion.div>
             )}
@@ -1134,7 +1143,7 @@ useEffect(() => {
                 {!supabaseHabilitado || !user ? (
                   <p className="mensaje-estado">Inicia sesión para acceder a la comunidad.</p>
                 ) : usuarioSeleccionado ? (
-                  <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} misJuegos={backlog} />
+                  <UserProfileView userId={usuarioSeleccionado} currentUserId={user.id} onVolver={volverAComunidad} misJuegos={backlog} onAbrirHub={abrirHubDeJuego} />
                 ) : (
                   <div className="flex flex-col gap-5 w-full">
                     <UserSearch currentUserId={user.id} onSelectUser={verPerfilDeUsuario} />
@@ -1187,6 +1196,11 @@ useEffect(() => {
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {juegoHubSeleccionado && (
+      <GameReviewsHub juego={juegoHubSeleccionado} onCerrar={cerrarHub} />
+  )}
+</AnimatePresence>
     </div>
   </div>
 );
