@@ -5,7 +5,11 @@ function formatearFecha(fechaISO) {
   return fechaISO ? new Date(fechaISO).toLocaleDateString() : '';
 }
 
+// 1. Tarjeta para las reseñas normales
 const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike, onSelectUser }) {
+  // Aseguramos que la puntuación sea un número seguro
+  const puntuacion = review.puntuacion || 0;
+
   return (
     <article className="bg-surface border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
       <button onClick={() => onSelectUser(review.user_id)} className="flex items-center gap-3 flex-1 min-w-0 text-left bg-transparent border-0 p-0 cursor-pointer">
@@ -24,8 +28,8 @@ const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike, onSele
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((valor) => (
           <Star key={valor} size={14} strokeWidth={1.5}
-            fill={valor <= review.puntuacion ? '#7C3AED' : 'none'}
-            color={valor <= review.puntuacion ? '#7C3AED' : '#9CA3AF'} />
+            fill={valor <= puntuacion ? '#7C3AED' : 'none'}
+            color={valor <= puntuacion ? '#7C3AED' : '#9CA3AF'} />
         ))}
       </div>
 
@@ -42,13 +46,9 @@ const TarjetaReview = memo(function TarjetaReview({ review, onToggleLike, onSele
   );
 });
 
-function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
-
-function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
-  if (reviews.length === 0) {
-    return <p className="text-sm text-muted text-center py-6">Sigue a otros jugadores para ver sus reseñas aquí.</p>;
-  }
-
+// 2. NUEVO: Componente para los eventos extraído correctamente
+const TarjetaEvento = memo(function TarjetaEvento({ evento }) {
+  const nombre = evento?.metadata?.username || 'Un jugador';
   
   return (
     <div className="bg-surface border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
@@ -60,17 +60,23 @@ function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
       </p>
     </div>
   );
-}
+});
+
+// 3. El contenedor principal corregido
+function SocialFeed({ reviews, onToggleLike, onSelectUser }) {
+  if (!reviews || reviews.length === 0) {
+    return <p className="text-sm text-muted text-center py-6">Sigue a otros jugadores para ver sus reseñas aquí.</p>;
+  }
 
   return (
     <div className="flex flex-col gap-3">
       {reviews.map((item) =>
-  item.tipo === 'evento' ? (
-    <TarjetaEvento key={`evento-${item.id}`} evento={item} />
-  ) : (
-    <TarjetaReview key={item.id} review={item} onToggleLike={onToggleLike} onSelectUser={onSelectUser} />
-  )
-)}
+        item.tipo === 'evento' ? (
+          <TarjetaEvento key={`evento-${item.id}`} evento={item} />
+        ) : (
+          <TarjetaReview key={`review-${item.id}`} review={item} onToggleLike={onToggleLike} onSelectUser={onSelectUser} />
+        )
+      )}
     </div>
   );
 }
