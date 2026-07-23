@@ -19,6 +19,9 @@ import { ProgressRing, DailyStreak } from './components/ProgressRing';
 import { CelebracionLogro } from './components/CelebracionLogro';
 import PlaylistsPanel from './components/PlaylistsPanel';
 import GameReviewsHub from './components/GameReviewsHub';
+import ShinyText from './components/ShinyText';
+import SpecularButton from './components/SpecularButton';
+import Ferrofluid from './components/Ferrofluid';
 
 const RAWG_API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 const RAWG_BASE_URL = "https://api.rawg.io/api/games";
@@ -288,11 +291,10 @@ function ModalResena({ juego, onEditar, onCerrar }) {
           <div className="modal-resena-texto">
             {juego.resena ? juego.resena : "Sin reseña escrita todavía."}
           </div>
-
-          <button className="btn-guardar" onClick={onEditar}>
-            <Pencil size={14} strokeWidth={2} />
-            Editar reseña
-          </button>
+            <SpecularButton size="md" radius={50} baseColor="#7C3AED" lineColor="#ffffff" textColor="#F3F4F6" onClick={onEditar}>
+              <Pencil size={14} strokeWidth={2} />
+              Editar reseña
+            </SpecularButton>
         </div>
       </motion.div>
     </motion.div>
@@ -342,9 +344,9 @@ function FormularioAuth({ onLogin, onRegistro, authError, authCargando, avisoReg
         {authError && <p className="auth-error">{authError}</p>}
         {avisoRegistro && <p className="auth-aviso">{avisoRegistro}</p>}
 
-        <button type="submit" className="btn-auth" disabled={authCargando}>
-          {authCargando ? <Loader2 size={16} className="girando" /> : modo === "login" ? "Entrar" : "Crear cuenta"}
-        </button>
+        <SpecularButton type="submit" size="md" radius={50} baseColor="#7C3AED" lineColor="#ffffff" textColor="#F3F4F6" disabled={authCargando}>
+  {authCargando ? <Loader2 size={16} className="girando" /> : modo === "login" ? "Entrar" : "Crear cuenta"}
+</SpecularButton>
       </form>
     </div>
   );
@@ -460,9 +462,9 @@ function PestanaBuscar({
                   value={resenaTexto}
                   onChange={(e) => setResenaTexto(e.target.value)}
                 />
-                <button className="btn-guardar" onClick={onGuardarResena}>
-                  Guardar reseña
-                </button>
+                <SpecularButton size="md" radius={50} baseColor="#7C3AED" lineColor="#ffffff" textColor="#F3F4F6" onClick={onGuardarResena}>
+  Guardar reseña
+</SpecularButton>
               </>
             )}
           </motion.div>
@@ -1088,14 +1090,31 @@ const cerrarHub = useCallback(() => setJuegoHubSeleccionado(null), []);
       className="app-shell w-full md:max-w-2xl lg:max-w-3xl md:mx-auto flex flex-col overflow-hidden overflow-x-hidden md:border-x md:border-white/5 md:shadow-2xl"
       style={{ height: '100dvh' }}
     >
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <Ferrofluid
+          colors={['#7C3AED', '#A78BFA', '#22D3EE']}
+          speed={0.4}
+          scale={1.4}
+          turbulence={0.8}
+          fluidity={0.15}
+          rimWidth={0.18}
+          sharpness={2.5}
+          shimmer={1}
+          glow={1.6}
+          flowDirection="up"
+          opacity={0.5}
+          mouseInteraction={false}
+        />
+      </div>
+
       <CelebracionLogro visible={!!celebrando} juegoNombre={celebrando} />
 
-      <header className="app-header shrink-0">
+      <header className="app-header shrink-0 relative z-10">
         <Gamepad2 size={22} strokeWidth={2} className="logo-icono" />
-        <h1>GameBox</h1>
+        <h1><ShinyText text="GameBox" speed={3} color="#F3F4F6" shineColor="#B388FF" spread={100} /></h1>
       </header>
 
-      <main className="contenido-pestana flex-1 overflow-y-auto w-full" style={{ minHeight: 0 }}>
+      <main className="contenido-pestana flex-1 overflow-y-auto w-full relative z-10" style={{ minHeight: 0 }}>
         <div className="w-full px-4">
           <AnimatePresence mode="wait">
             {pestanaActiva === "buscar" && (
@@ -1168,7 +1187,7 @@ const cerrarHub = useCallback(() => setJuegoHubSeleccionado(null), []);
         </div>
       </main>
 
-      <nav className="tab-bar shrink-0">
+      <nav className="tab-bar shrink-0 relative z-10">
         <button type="button" className={`tab-btn ${pestanaActiva === "buscar" ? "activo" : ""}`} onClick={() => setPestanaActiva("buscar")}>
           <Search size={20} strokeWidth={2} /><span className="tab-label">Buscar</span>
         </button>
